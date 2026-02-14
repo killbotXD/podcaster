@@ -27,7 +27,7 @@ def research(
     audience: str = typer.Option(None, "--audience", "-a", help="Target audience description"),
     topic: str = typer.Option(None, "--topic", "-t", help="Podcast topic or theme"),
     output_format: str = typer.Option(
-        "console", "--format", "-f", help="Output format: console, json, markdown"
+        "markdown", "--format", "-f", help="Output format: console, json, markdown"
     ),
     num_points: int = typer.Option(5, "--num-points", "-n", help="Number of talking points"),
     output_file: str = typer.Option(None, "--output", "-o", help="Write output to a file"),
@@ -87,15 +87,20 @@ def research(
             print(text)
     elif output_format == "markdown":
         text = format_markdown(brief)
-        if output_file:
-            _write_file(output_file, text)
-        else:
-            print(text)
+        dest = output_file or _default_filename(name, "md")
+        _write_file(dest, text)
+        # Also show a summary on the console
+        format_console(brief)
     else:
         format_console(brief)
         if output_file:
             _write_file(output_file, format_markdown(brief))
             console.print(f"\n[dim]Also saved to {output_file}[/dim]")
+
+
+def _default_filename(guest_name: str, ext: str) -> str:
+    slug = guest_name.lower().replace(" ", "_")
+    return f"podcast_brief_{slug}.{ext}"
 
 
 def _write_file(path: str, content: str) -> None:
