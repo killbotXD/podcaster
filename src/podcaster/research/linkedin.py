@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 from podcaster.research.base import BaseResearcher
 
@@ -59,5 +59,4 @@ class LinkedInResearcher(BaseResearcher):
 
     @staticmethod
     def _ddg_text(query: str) -> list[dict]:
-        with DDGS() as ddgs:
-            return list(ddgs.text(query, max_results=5))
+        return list(DDGS().text(query, max_results=5))

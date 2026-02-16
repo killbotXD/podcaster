@@ -15,7 +15,9 @@ from podcaster.research.reddit import RedditResearcher
 from podcaster.research.twitter import TwitterResearcher
 from podcaster.research.web import WebResearcher
 
-console = Console()
+console = Console(stderr=True)
+
+PER_SOURCE_TIMEOUT = 45  # seconds
 
 
 class ResearchOrchestrator:
@@ -41,24 +43,27 @@ class ResearchOrchestrator:
             f"{len(available)} sources...\n"
         )
 
-        # Run all researchers concurrently
-        tasks = {
-            r.source_name: asyncio.create_task(r.research(person)) for r in available
-        }
-
-        for name, task in tasks.items():
+        # Run researchers sequentially to avoid DuckDuckGo rate-limiting.
+        # Each gets a timeout so a single hanging source can't block everything.
+        for r in available:
+            name = r.source_name
             try:
-                items = await task
+                items = await asyncio.wait_for(
+                    r.research(person), timeout=PER_SOURCE_TIMEOUT
+                )
                 if items:
                     result.items.extend(items)
                     result.sources_succeeded.append(name)
-                    console.print(f"  [green]✓[/green] {name}: {len(items)} items")
+                    console.print(f"  [green]\u2713[/green] {name}: {len(items)} items")
                 else:
                     result.sources_failed[name] = "no results"
-                    console.print(f"  [yellow]–[/yellow] {name}: no results")
+                    console.print(f"  [yellow]\u2013[/yellow] {name}: no results")
+            except asyncio.TimeoutError:
+                result.sources_failed[name] = "timed out"
+                console.print(f"  [red]\u2717[/red] {name}: timed out ({PER_SOURCE_TIMEOUT}s)")
             except Exception as exc:
                 result.sources_failed[name] = str(exc)
-                console.print(f"  [red]✗[/red] {name}: {exc}")
+                console.print(f"  [red]\u2717[/red] {name}: {exc}")
 
         # Deduplicate by URL
         seen_urls: set[str] = set()
