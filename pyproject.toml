@@ -1,0 +1,40 @@
+[project]
+name = "podcaster"
+version = "0.1.0"
+description = "Generate podcast talking points by researching a guest online"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.15.0",
+    "rich>=13.0.0",
+    "httpx>=0.28.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "feedparser>=6.0.0",
+    "praw>=7.8.0",
+    "anthropic>=0.43.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "ddgs>=7.0.0",
+]
+
+[project.scripts]
+podcaster = "podcaster.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/podcaster"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
